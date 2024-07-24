@@ -19,6 +19,7 @@
                     <a href="/users/{{ user.id }}" class="card-link">
                       <img src="{{ user.image_url }}" alt="Image for {{ user.username }}" class="card-image">
                       <p>@{{ user.username }}</p>
+                      <p >{{ user.bio or 'No bio available' }}</p>
                     </a>
 
                     {% if g.user %}
