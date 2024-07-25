@@ -320,8 +320,14 @@ def homepage():
     """
 
     if g.user:
+        # Get list of user IDs that the logged-in user is following
+        followed_user_ids = [user.id for user in g.user.following]
+        followed_user_ids.append(g.user.id) # Include the logged in user
+
+        # Query for the last 100 messages from followed user and the logged-in user.
         messages = (Message
                     .query
+                    .filter(Message.user_id.in_(followed_user_ids))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
