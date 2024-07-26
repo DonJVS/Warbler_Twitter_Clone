@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <h2>{{ user.username }}'s Liked Warbles</h2>
+    <ul class="list-group no-hover" id="messages">
+      {% if messages %}
+        {% for message in messages %}
+          <li class="list-group-item">
+            <a href="{{ url_for('users_show', user_id=message.user.id) }}">
+              <img src="{{ message.user.image_url }}" alt="" class="timeline-image">
+            </a>
+            <div class="message-area">
+              <div class="message-heading">
+                <a href="{{ url_for('users_show', user_id=message.user.id) }}">@{{ message.user.username }}</a>
+                <span class="text-muted">{{ message.timestamp.strftime('%d %B %Y') }}</span>
+              </div>
+              <p class="single-message">{{ message.text }}</p>
+              {% if g.user %}
+                {% if message.id in likes %}
+                  <form method="POST" action="{{ url_for('remove_like', message_id=message.id) }}" class="d-inline">
+                    <button class="btn btn-secondary btn-sm" type="submit">
+                      <i class="fa fa-thumbs-down"></i> Unlike
+                    </button>
+                  </form>
+                {% else %}
+                  <form method="POST" action="{{ url_for('add_like', message_id=message.id) }}" class="d-inline">
+                    <button class="btn btn-primary btn-sm" type="submit">
+                      <i class="fa fa-thumbs-up"></i> Like
+                    </button>
+                  </form>
+                {% endif %}
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      {% else %}
+        <p>No liked messages to display.</p>
+      {% endif %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

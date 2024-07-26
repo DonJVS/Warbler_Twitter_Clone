@@ -29,6 +29,19 @@
                     <button class="btn btn-outline-primary btn-sm">Follow</button>
                   </form>
                 {% endif %}
+                {% if message.id in g.user.likes | map(attribute='id') %}
+                    <form method="POST" action="{{ url_for('remove_like', message_id=message.id) }}" class="d-inline">
+                      <button class="btn btn-secondary btn-sm">
+                        <i class="fa fa-thumbs-down"></i> Unlike
+                      </button>
+                    </form>
+                {% else %}
+                  <form method="POST" action="{{ url_for('add_like', message_id=message.id) }}" class="d-inline">
+                    <button class="btn btn-primary btn-sm">
+                      <i class="fa fa-thumbs-up"></i> Like
+                    </button>
+                  </form>
+                {% endif %}
               {% endif %}
             </div>
             <p class="single-message">{{ message.text }}</p>

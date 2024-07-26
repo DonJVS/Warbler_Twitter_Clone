@@ -60,6 +60,7 @@
     <h4 id="sidebar-username">@{{ user.username }}</h4>
     <p>{{ user.bio or 'No bio available' }}</p>
     <p class="user-location"><span class="fa fa-map-marker"></span>{{ user.location or 'No location available' }}</p>
+    <p>Liked Messages: <a href="{{ url_for('show_liked_messages', user_id=user.id) }}">{{ user.likes|length }}</a></p>
   </div>
 
   {% block user_details %}

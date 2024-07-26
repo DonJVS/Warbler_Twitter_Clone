@@ -45,9 +45,10 @@ class Likes(db.Model):
     message_id = db.Column(
         db.Integer,
         db.ForeignKey('messages.id', ondelete='cascade'),
-        unique=True
+        # unique=True
     )
 
+    __table_args__ = (db.UniqueConstraint('user_id', 'message_id', name='_user_message_uc'),)
 
 class User(db.Model):
     """User in the system."""
@@ -112,7 +113,8 @@ class User(db.Model):
 
     likes = db.relationship(
         'Message',
-        secondary="likes"
+        secondary="likes",
+        back_populates='liked_by'
     )
 
     def __repr__(self):
@@ -129,6 +131,10 @@ class User(db.Model):
 
         found_user_list = [user for user in self.following if user == other_user]
         return len(found_user_list) == 1
+    
+    def liked_messages(self):
+        """Returns a list of messages liked by the user."""
+        return Message.query.join(Likes).filter(Likes.user_id == self.id).all()
 
     @classmethod
     def signup(cls, username, email, password, image_url):
@@ -199,6 +205,15 @@ class Message(db.Model):
 
     user = db.relationship('User')
 
+    liked_by = db.relationship(
+        'User',
+        secondary='likes',
+        back_populates='likes'
+    )
+
+    def is_liked_by(self, user):
+        """Check if the message is liked by a user."""
+        return user in self.liked_by
 
 def connect_db(app):
     """Connect this database to provided Flask app.

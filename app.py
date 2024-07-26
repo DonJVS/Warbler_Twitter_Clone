@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 import pdb
 
 from forms import UserAddForm, LoginForm, MessageForm, UserProfileForm
-from models import db, connect_db, User, Message
+from models import db, connect_db, User, Message, Likes
 
 CURR_USER_KEY = "curr_user"
 
@@ -258,6 +258,56 @@ def delete_user():
     return redirect("/signup")
 
 
+@app.route('/users/add_like/<int:message_id>', methods=["POST"])
+def add_like(message_id):
+    """Like a message."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    message = Message.query.get_or_404(message_id)
+
+    if message in g.user.likes:
+        flash("You have already liked this message.", "info")
+    else:
+        g.user.likes.append(message)
+        db.session.commit()
+        flash("Message liked!", "success")
+
+    return redirect(request.referrer or '/')  # Redirect back to the previous page
+
+
+@app.route('/users/remove_like/<int:message_id>', methods=["POST"])
+def remove_like(message_id):
+    """Unlike a message."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    message = Message.query.get_or_404(message_id)
+
+    if message not in g.user.likes:
+        flash("You have not liked this message.", "info")
+    else:
+        g.user.likes.remove(message)
+        db.session.commit()
+        flash("Message unliked!", "success")
+
+    return redirect(request.referrer or '/')  # Redirect back to the previous pag
+
+
+@app.route('/users/<int:user_id>/liked')
+def show_liked_messages(user_id):
+    """Show messages liked by a user."""
+
+    user = User.query.get_or_404(user_id)
+    liked_messages = user.liked_messages()
+    return render_template('messages/liked_messages.html', user=user, messages=liked_messages)
+
+
+
 ##############################################################################
 # Messages routes:
 
@@ -307,6 +357,46 @@ def messages_destroy(message_id):
     return redirect(f"/users/{g.user.id}")
 
 
+# @app.route('/messages/<int:message_id>/like', methods=["POST"])
+# def like_message(message_id):
+#     """Like a message."""
+
+#     if not g.user:
+#         flash("Access unauthorized.", "danger")
+#         return redirect("/")
+
+#     message = Message.query.get_or_404(message_id)
+
+#     if g.user in message.liked_by:
+#         flash("You have already liked this message.", "info")
+#     else:
+#         g.user.likes.append(message)
+#         db.session.commit()
+#         flash("Message liked!", "success")
+
+#     return redirect(f"/messages/{message_id}")
+
+
+# @app.route('/messages/<int:message_id>/unlike', methods=["POST"])
+# def unlike_message(message_id):
+#     """Unlike a message."""
+
+#     if not g.user:
+#         flash("Access unauthorized.", "danger")
+#         return redirect("/")
+
+#     message = Message.query.get_or_404(message_id)
+
+#     if g.user not in message.liked_by:
+#         flash("You have not liked this message.", "info")
+#     else:
+#         g.user.likes.remove(message)
+#         db.session.commit()
+#         flash("Message unliked!", "success")
+
+#     return redirect(f"/messages/{message_id}")
+
+
 ##############################################################################
 # Homepage and error pages
 
@@ -331,8 +421,9 @@ def homepage():
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
-
-        return render_template('home.html', messages=messages)
+        
+        likes = {like.message_id for like in Likes.query.filter_by(user_id=g.user.id).all()}
+        return render_template('home.html', messages=messages, likes=likes)
 
     else:
         return render_template('home-anon.html')
