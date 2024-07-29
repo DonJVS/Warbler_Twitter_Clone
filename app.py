@@ -319,12 +319,13 @@ def messages_add():
     """
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized", "danger")
         return redirect("/")
 
     form = MessageForm()
 
     if form.validate_on_submit():
+        
         msg = Message(text=form.text.data)
         g.user.messages.append(msg)
         db.session.commit()
@@ -347,54 +348,19 @@ def messages_destroy(message_id):
     """Delete a message."""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized", "danger")
         return redirect("/")
 
     msg = Message.query.get(message_id)
+
+    if msg.user_id != g.user.id:
+        flash('Access unauthorized', 'danger')
+        return redirect('/')
+    
     db.session.delete(msg)
     db.session.commit()
 
     return redirect(f"/users/{g.user.id}")
-
-
-# @app.route('/messages/<int:message_id>/like', methods=["POST"])
-# def like_message(message_id):
-#     """Like a message."""
-
-#     if not g.user:
-#         flash("Access unauthorized.", "danger")
-#         return redirect("/")
-
-#     message = Message.query.get_or_404(message_id)
-
-#     if g.user in message.liked_by:
-#         flash("You have already liked this message.", "info")
-#     else:
-#         g.user.likes.append(message)
-#         db.session.commit()
-#         flash("Message liked!", "success")
-
-#     return redirect(f"/messages/{message_id}")
-
-
-# @app.route('/messages/<int:message_id>/unlike', methods=["POST"])
-# def unlike_message(message_id):
-#     """Unlike a message."""
-
-#     if not g.user:
-#         flash("Access unauthorized.", "danger")
-#         return redirect("/")
-
-#     message = Message.query.get_or_404(message_id)
-
-#     if g.user not in message.liked_by:
-#         flash("You have not liked this message.", "info")
-#     else:
-#         g.user.likes.remove(message)
-#         db.session.commit()
-#         flash("Message unliked!", "success")
-
-#     return redirect(f"/messages/{message_id}")
 
 
 ##############################################################################
