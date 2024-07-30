@@ -393,6 +393,12 @@ def homepage():
 
     else:
         return render_template('home-anon.html')
+    
+
+@app.errorhandler(404)
+def page_not_found(e):
+    """Custom 404 page."""
+    return render_template('404.html'), 404
 
 
 ##############################################################################
